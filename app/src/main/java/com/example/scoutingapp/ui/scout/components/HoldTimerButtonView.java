@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -49,6 +50,7 @@ public class HoldTimerButtonView extends LinearLayout {
         setPadding(padding, padding, padding, padding);
         setMinimumWidth(dp(140));
         setMinimumHeight(dp(76));
+        setHapticFeedbackEnabled(true);
 
         android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
         bg.setColor(backgroundColor);
@@ -107,6 +109,12 @@ public class HoldTimerButtonView extends LinearLayout {
 
         isPressed = true;
         liveView.setVisibility(VISIBLE);
+
+        // pressed feedback
+        animate().cancel();
+        animate().scaleX(1.08f).scaleY(1.08f).setDuration(60).start();
+        setAlpha(0.85f);
+        performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
 
         tickRunnable = new Runnable() {
             @Override
