@@ -145,7 +145,7 @@ public class HoldTimerButtonView extends LinearLayout {
             public void run() {
                 if (!isPressed) return;
                 long currentPressMs = SystemClock.elapsedRealtime() - pressStart;
-                liveView.setText(String.format(Locale.US, "\u25B6 %.1fs", currentPressMs / 1000.0));
+                liveView.setText(String.format(Locale.US, "▶ %.1fs", currentPressMs / 1000.0));
                 handler.postDelayed(this, 50);
             }
         };
