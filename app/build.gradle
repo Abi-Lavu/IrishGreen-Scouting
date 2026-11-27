@@ -2,12 +2,24 @@ plugins {
     id 'com.android.application'
 }
 
+// Supabase credentials live in local.properties (git-ignored), never in tracked files.
+// Add these two lines to local.properties with the NEW BUILT Supabase project's values:
+//   SUPABASE_URL=https://<project-ref>.supabase.co
+//   SUPABASE_ANON_KEY=<anon / publishable key>
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+def supabaseUrl = localProps.getProperty('SUPABASE_URL', '')
+def supabaseAnonKey = localProps.getProperty('SUPABASE_ANON_KEY', '')
+
 android {
     namespace 'com.example.scoutingapp'
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.example.scoutingapp"
+        applicationId "com.irishgreen.builtscouting"
         minSdk 26
         targetSdk 35
         versionCode 1
@@ -18,8 +30,8 @@ android {
             useSupportLibrary true
         }
 
-        buildConfigField "String", "SUPABASE_URL", "\"${project.findProperty('SUPABASE_URL') ?: ''}\""
-        buildConfigField "String", "SUPABASE_ANON_KEY", "\"${project.findProperty('SUPABASE_ANON_KEY') ?: ''}\""
+        buildConfigField "String", "SUPABASE_URL", "\"${supabaseUrl}\""
+        buildConfigField "String", "SUPABASE_ANON_KEY", "\"${supabaseAnonKey}\""
     }
 
     buildTypes {
