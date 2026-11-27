@@ -43,12 +43,6 @@
             android:label="Scout"
             android:theme="@style/Theme.ScoutingApp" />
 
-        <activity
-            android:name=".ui.data.DataActivity"
-            android:exported="false"
-            android:label="View Data"
-            android:theme="@style/Theme.ScoutingApp" />
-
     </application>
 
 </manifest>

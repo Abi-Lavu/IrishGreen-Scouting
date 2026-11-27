@@ -82,16 +82,6 @@
             android:background="@color/resume_highlight_bg" />
 
         <TextView
-            android:id="@+id/drawer_item_data"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:text="View Data"
-            android:textColor="@color/text" />
-
-        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider" />
-
-        <TextView
             android:id="@+id/drawer_item_sync_now"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

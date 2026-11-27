@@ -18,7 +18,6 @@ import com.example.scoutingapp.R;
 import com.example.scoutingapp.data.scout.MatchStateStore;
 import com.example.scoutingapp.data.scout.SavedMatchState;
 import com.example.scoutingapp.sync.SyncManager;
-import com.example.scoutingapp.ui.data.DataActivity;
 import com.example.scoutingapp.ui.scout.ScoutActivity;
 
 import java.util.Locale;
@@ -55,10 +54,6 @@ public class HomeActivity extends AppCompatActivity {
         addToolbarTitle(toolbar);
 
         findViewById(R.id.drawer_item_scout).setOnClickListener(v -> drawerLayout.closeDrawers());
-        findViewById(R.id.drawer_item_data).setOnClickListener(v -> {
-            drawerLayout.closeDrawers();
-            startActivity(new Intent(this, DataActivity.class));
-        });
 
         drawerItemSyncNow = findViewById(R.id.drawer_item_sync_now);
         drawerItemSyncNow.setOnClickListener(v -> {
