@@ -6,7 +6,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -15,9 +14,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.scoutingapp.R;
-import com.example.scoutingapp.data.config.Competition;
 import com.example.scoutingapp.data.config.DeviceConfigStore;
-import com.example.scoutingapp.data.config.ScoutPosition;
+import com.example.scoutingapp.ui.scout.Alliance;
 import com.example.scoutingapp.ui.scout.ScoutActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -25,13 +23,11 @@ import com.google.android.material.textfield.TextInputEditText;
 public class ManualScoutActivity extends AppCompatActivity {
 
     private ManualScoutViewModel viewModel;
-    private LinearLayout redRow;
-    private LinearLayout blueRow;
+    /** Fixed event key stored with each match until step 9 replaces the upload format. */
+    private static final String EVENT_KEY = "built";
+
+    private LinearLayout allianceRow;
     private MaterialButton btnStart;
-    private ProgressBar progressValidating;
-    private View warningAlreadyScouted;
-    private TextView tvDefaultPosition;
-    private TextView tvCompetitionBadge;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,17 +41,15 @@ public class ManualScoutActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        redRow = findViewById(R.id.row_red_positions);
-        blueRow = findViewById(R.id.row_blue_positions);
+        allianceRow = findViewById(R.id.row_alliance);
         btnStart = findViewById(R.id.btn_start_scouting);
-        progressValidating = findViewById(R.id.progress_validating);
-        warningAlreadyScouted = findViewById(R.id.warning_already_scouted);
-        tvDefaultPosition = findViewById(R.id.tv_default_position);
-        tvCompetitionBadge = findViewById(R.id.tv_competition_badge);
 
         TextInputEditText etMatch = findViewById(R.id.et_match_number);
         TextInputEditText etTeam = findViewById(R.id.et_team_number);
         TextInputEditText etScouter = findViewById(R.id.et_scouter_name);
+
+        ManualScoutState initial = viewModel.state.getValue();
+        if (initial != null && initial.scouterName != null) etScouter.setText(initial.scouterName);
 
         etMatch.addTextChangedListener(watcherFor(viewModel::onMatchIdChange));
         etTeam.addTextChangedListener(watcherFor(viewModel::onTeamNumberChange));
@@ -63,18 +57,18 @@ public class ManualScoutActivity extends AppCompatActivity {
 
         btnStart.setOnClickListener(v -> {
             ManualScoutState s = viewModel.state.getValue();
-            if (s == null || s.competition == null) return;
+            if (s == null || !s.canSubmit) return;
             Integer matchId = parseIntOrNull(s.matchId);
             Integer teamNumber = parseIntOrNull(s.teamNumber);
             if (matchId == null || teamNumber == null) return;
-            ScoutPosition position = s.effectivePosition();
+            viewModel.rememberScouterName();
 
             Intent intent = new Intent(this, ScoutActivity.class);
             intent.putExtra(ScoutActivity.EXTRA_MATCH_ID, matchId);
             intent.putExtra(ScoutActivity.EXTRA_TEAM_NUMBER, teamNumber);
-            intent.putExtra(ScoutActivity.EXTRA_SCOUTER_NAME, s.scouterName);
-            intent.putExtra(ScoutActivity.EXTRA_POSITION, position.toLabel());
-            intent.putExtra(ScoutActivity.EXTRA_COMPETITION, s.competition.getKey());
+            intent.putExtra(ScoutActivity.EXTRA_SCOUTER_NAME, s.scouterName.trim());
+            intent.putExtra(ScoutActivity.EXTRA_POSITION, allianceLabel(s.alliance));
+            intent.putExtra(ScoutActivity.EXTRA_COMPETITION, EVENT_KEY);
             intent.putExtra(ScoutActivity.EXTRA_RESUME, false);
             startActivity(intent);
         });
@@ -85,33 +79,23 @@ public class ManualScoutActivity extends AppCompatActivity {
     private void render(ManualScoutState s) {
         if (s == null) return;
 
-        if (s.competition != null) {
-            tvCompetitionBadge.setText(s.competition.getDisplayName());
-        }
-        tvDefaultPosition.setText("Device default: " + s.defaultPosition.toLabel());
-
-        ScoutPosition effective = s.effectivePosition();
-        populatePositions(redRow, new ScoutPosition[]{ScoutPosition.RED_1, ScoutPosition.RED_2, ScoutPosition.RED_3},
-                getColor(R.color.alliance_red), effective);
-        populatePositions(blueRow, new ScoutPosition[]{ScoutPosition.BLUE_1, ScoutPosition.BLUE_2, ScoutPosition.BLUE_3},
-                getColor(R.color.alliance_blue), effective);
-
-        warningAlreadyScouted.setVisibility(s.isAlreadyScouted ? View.VISIBLE : View.GONE);
-
-        boolean enabled = s.canSubmit && !s.isValidating;
-        btnStart.setEnabled(enabled);
-        btnStart.setVisibility(s.isValidating ? View.INVISIBLE : View.VISIBLE);
-        progressValidating.setVisibility(s.isValidating ? View.VISIBLE : View.GONE);
+        populateAlliances(s.alliance);
+        btnStart.setEnabled(s.canSubmit);
     }
 
-    private void populatePositions(LinearLayout row, ScoutPosition[] positions, int accentColor, ScoutPosition selected) {
-        row.removeAllViews();
-        for (ScoutPosition pos : positions) {
+    private static String allianceLabel(Alliance alliance) {
+        return alliance == Alliance.RED ? "Red" : "Blue";
+    }
+
+    private void populateAlliances(Alliance selected) {
+        allianceRow.removeAllViews();
+        for (Alliance alliance : Alliance.values()) {
+            int accentColor = getColor(alliance == Alliance.RED ? R.color.alliance_red : R.color.alliance_blue);
             TextView chip = new TextView(this);
-            chip.setText(pos.toLabel());
+            chip.setText(allianceLabel(alliance));
             chip.setGravity(android.view.Gravity.CENTER);
-            chip.setTextSize(14);
-            boolean isSelected = pos == selected;
+            chip.setTextSize(16);
+            boolean isSelected = alliance == selected;
             chip.setTextColor(isSelected ? accentColor : getColor(R.color.text_dim));
             chip.setTypeface(null, isSelected ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
 
@@ -124,8 +108,8 @@ public class ManualScoutActivity extends AppCompatActivity {
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f);
             params.setMarginEnd(dp(10));
             chip.setLayoutParams(params);
-            chip.setOnClickListener(v -> viewModel.onPositionChange(pos));
-            row.addView(chip);
+            chip.setOnClickListener(v -> viewModel.onAllianceChange(alliance));
+            allianceRow.addView(chip);
         }
     }
 

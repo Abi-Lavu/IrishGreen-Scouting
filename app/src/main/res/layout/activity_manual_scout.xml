@@ -46,29 +46,6 @@
                 <View android:layout_width="match_parent" android:layout_height="1dp"
                     android:layout_marginTop="6dp" android:layout_marginBottom="16dp" android:background="@color/accent" android:alpha="0.3" />
 
-                <LinearLayout
-                    android:id="@+id/competition_badge"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@drawable/bg_surface_8"
-                    android:padding="12dp"
-                    android:layout_marginBottom="16dp">
-
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Competition" android:textColor="@color/text_dim" android:textSize="12sp" />
-
-                    <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
-
-                    <TextView
-                        android:id="@+id/tv_competition_badge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/accent"
-                        android:textStyle="bold"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -128,13 +105,13 @@
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:text="This match has already been scouted for the selected position."
+                        android:text="This match has already been scouted."
                         android:textColor="@color/error_red"
                         android:textSize="13sp" />
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- RIGHT: position + submit -->
+            <!-- RIGHT: alliance + submit -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_weight="1"
@@ -145,7 +122,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="SCOUTING POSITION"
+                    android:text="ALLIANCE"
                     android:textColor="@color/accent"
                     android:textStyle="bold"
                     android:textSize="11sp"
@@ -154,43 +131,10 @@
                 <View android:layout_width="match_parent" android:layout_height="1dp"
                     android:layout_marginTop="6dp" android:layout_marginBottom="12dp" android:background="@color/accent" android:alpha="0.3" />
 
-                <TextView
-                    android:id="@+id/tv_default_position"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/text_dim"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="12dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Red Alliance"
-                    android:textColor="@color/alliance_red"
-                    android:textStyle="bold"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="8dp" />
-
                 <LinearLayout
-                    android:id="@+id/row_red_positions"
+                    android:id="@+id/row_alliance"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="16dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Blue Alliance"
-                    android:textColor="@color/alliance_blue"
-                    android:textStyle="bold"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:id="@+id/row_blue_positions"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="56dp"
                     android:orientation="horizontal"
                     android:layout_marginBottom="24dp" />
 
@@ -205,14 +149,6 @@
                     app:backgroundTint="@color/accent"
                     app:cornerRadius="12dp" />
 
-                <ProgressBar
-                    android:id="@+id/progress_validating"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="8dp"
-                    android:indeterminateTint="@color/black"
-                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

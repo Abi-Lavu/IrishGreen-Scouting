@@ -11,7 +11,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.scoutingapp.R;
-import com.example.scoutingapp.data.config.DeviceConfigStore;
 import com.example.scoutingapp.data.repository.DataRepository;
 import com.example.scoutingapp.ui.data.components.MatchListPaneView;
 import com.example.scoutingapp.ui.data.components.TeamBreakdownPaneView;
@@ -27,10 +26,8 @@ public class DataActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_data);
 
-        DeviceConfigStore configStore = new DeviceConfigStore(this);
-        String competition = configStore.getConfigLiveData().getValue() != null
-                ? configStore.getConfigLiveData().getValue().getCompetition().getKey()
-                : "dalton";
+        // Competition selection was removed in step 2; this whole screen is deleted in step 3.
+        String competition = "built";
 
         IDataRepository repository = new DataRepository(competition);
         viewModel = new ViewModelProvider(this, DataViewModel.factory(repository, competition))

@@ -7,11 +7,8 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.util.Log;
 
-import com.example.scoutingapp.data.config.ScoutPosition;
-import com.example.scoutingapp.data.repository.ScheduleCache;
 import com.example.scoutingapp.data.scout.PendingUploadStore;
 import com.example.scoutingapp.data.supabase.PostgrestClient;
-import com.example.scoutingapp.domain.TableResolver;
 import com.example.scoutingapp.util.AppExecutors;
 import com.example.scoutingapp.util.Callback;
 
@@ -112,9 +109,6 @@ public final class SyncManager {
                 try {
                     client.insert(item.tableName, new JSONObject(item.payloadJson));
                     PendingUploadStore.removeById(item.id);
-                    // We just proved we have connectivity, so it's safe to force a fresh
-                    // authoritative re-fetch of scouted IDs next time they're needed.
-                    ScheduleCache.invalidateScoutedIds(item.competitionKey, positionFromTableString(item.scoutingPosition));
                     uploaded++;
                 } catch (Exception e) {
                     lastError = e.getMessage();
@@ -133,10 +127,4 @@ public final class SyncManager {
         });
     }
 
-    private static ScoutPosition positionFromTableString(String posStr) {
-        for (ScoutPosition p : ScoutPosition.values()) {
-            if (TableResolver.positionString(p).equals(posStr)) return p;
-        }
-        return ScoutPosition.RED_1; // unreachable in practice; invalidation is best-effort anyway
-    }
 }

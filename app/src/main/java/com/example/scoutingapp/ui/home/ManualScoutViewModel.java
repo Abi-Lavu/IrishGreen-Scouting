@@ -1,46 +1,29 @@
 package com.example.scoutingapp.ui.home;
 
-import android.os.Handler;
-import android.os.Looper;
-
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.scoutingapp.data.config.DeviceConfig;
 import com.example.scoutingapp.data.config.DeviceConfigStore;
-import com.example.scoutingapp.data.config.ScoutPosition;
-import com.example.scoutingapp.data.repository.MatchRepository;
-import com.example.scoutingapp.util.Callback;
+import com.example.scoutingapp.ui.scout.Alliance;
 
+/**
+ * Match setup form. Works fully offline: there is no schedule and no online
+ * "already scouted" check in BUILT, so the form is valid as soon as every field is filled.
+ */
 public class ManualScoutViewModel extends ViewModel {
 
-    private final MatchRepository matchRepository;
+    private final DeviceConfigStore configStore;
 
     private final MutableLiveData<ManualScoutState> _state = new MutableLiveData<>(new ManualScoutState());
     public final LiveData<ManualScoutState> state = _state;
 
-    private final Handler debounceHandler = new Handler(Looper.getMainLooper());
-    private Runnable pendingValidation;
-
     public ManualScoutViewModel(DeviceConfigStore configStore) {
-        this(configStore, new MatchRepository());
-    }
-
-    public ManualScoutViewModel(DeviceConfigStore configStore, MatchRepository matchRepository) {
-        this.matchRepository = matchRepository;
-
-        configStore.getConfigLiveData().observeForever(this::onConfigChanged);
-    }
-
-    private void onConfigChanged(DeviceConfig config) {
-        if (config == null) return;
+        this.configStore = configStore;
         ManualScoutState s = current();
-        s.defaultPosition = config.getScoutPosition();
-        s.competition = config.getCompetition();
-        s.scouterName = config.getScoutName();
+        s.scouterName = configStore.getScoutName();
         _state.setValue(s);
     }
 
@@ -52,82 +35,41 @@ public class ManualScoutViewModel extends ViewModel {
     public void onMatchIdChange(String value) {
         ManualScoutState s = current();
         s.matchId = value;
-        _state.setValue(s);
-        scheduleValidation();
+        publish(s);
     }
 
     public void onTeamNumberChange(String value) {
         ManualScoutState s = current();
         s.teamNumber = value;
-        _state.setValue(s);
-        scheduleValidation();
+        publish(s);
     }
 
     public void onScouterNameChange(String value) {
         ManualScoutState s = current();
         s.scouterName = value;
-        _state.setValue(s);
-        scheduleValidation();
+        publish(s);
     }
 
-    public void onPositionChange(ScoutPosition position) {
+    public void onAllianceChange(Alliance alliance) {
         ManualScoutState s = current();
-        s.selectedPosition = position;
+        s.alliance = alliance;
+        publish(s);
+    }
+
+    /** Remember the scouter name on this tablet so the next match pre-fills it. */
+    public void rememberScouterName() {
+        configStore.updateScoutName(current().scouterName);
+    }
+
+    private void publish(ManualScoutState s) {
+        s.canSubmit = parseIntOrNull(s.matchId) != null
+                && parseIntOrNull(s.teamNumber) != null
+                && s.scouterName != null && !s.scouterName.trim().isEmpty()
+                && s.alliance != null;
         _state.setValue(s);
-        scheduleValidation();
     }
 
-    /**
-     * Cancels any in-flight validation and schedules a new one after 500ms.
-     * This means a network call only fires once the user pauses typing/selecting -
-     * equivalent of the original's Job.cancel() + delay(500).
-     */
-    private void scheduleValidation() {
-        if (pendingValidation != null) debounceHandler.removeCallbacks(pendingValidation);
-        pendingValidation = this::validateForm;
-        debounceHandler.postDelayed(pendingValidation, 500);
-    }
-
-    private void validateForm() {
-        ManualScoutState s = current();
-        Integer matchId = parseIntOrNull(s.matchId);
-        com.example.scoutingapp.data.config.Competition competition = s.competition;
-        ScoutPosition position = s.effectivePosition();
-
-        if (matchId == null || s.scouterName == null || s.scouterName.trim().isEmpty() || competition == null) {
-            ManualScoutState updated = current();
-            updated.canSubmit = false;
-            updated.isAlreadyScouted = false;
-            _state.setValue(updated);
-            return;
-        }
-
-        ManualScoutState validating = current();
-        validating.isValidating = true;
-        _state.setValue(validating);
-
-        matchRepository.isMatchScouted(competition, position, matchId, new Callback<Boolean>() {
-            @Override
-            public void onSuccess(Boolean isAlreadyScouted) {
-                ManualScoutState updated = current();
-                updated.isValidating = false;
-                updated.isAlreadyScouted = isAlreadyScouted;
-                updated.canSubmit = !isAlreadyScouted;
-                _state.setValue(updated);
-            }
-
-            @Override
-            public void onError(Exception e) {
-                ManualScoutState updated = current();
-                updated.isValidating = false;
-                updated.isAlreadyScouted = false;
-                updated.canSubmit = false;
-                _state.setValue(updated);
-            }
-        });
-    }
-
-    private static Integer parseIntOrNull(String s) {
+    static Integer parseIntOrNull(String s) {
         try {
             return Integer.parseInt(s.trim());
         } catch (Exception e) {

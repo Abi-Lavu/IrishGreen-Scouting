@@ -9,14 +9,10 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.scoutingapp.data.config.Competition;
-import com.example.scoutingapp.data.config.ScoutPosition;
-import com.example.scoutingapp.data.repository.MatchRepository;
 import com.example.scoutingapp.data.scout.MatchStateStore;
 import com.example.scoutingapp.data.scout.PendingUploadStore;
 import com.example.scoutingapp.data.scout.SavedMatchState;
 import com.example.scoutingapp.data.supabase.PostgrestClient;
-import com.example.scoutingapp.domain.TableResolver;
 import com.example.scoutingapp.sync.SyncManager;
 import com.example.scoutingapp.util.AppExecutors;
 
@@ -39,7 +35,6 @@ public class ScoutViewModel extends ViewModel {
 
     private final PostgrestClient postgrest = new PostgrestClient();
     private final MatchStateStore matchStateStore;
-    private final MatchRepository matchRepository;
 
     private final MutableLiveData<ScoutUiState> _uiState = new MutableLiveData<>(new ScoutUiState());
     public final LiveData<ScoutUiState> uiState = _uiState;
@@ -50,13 +45,11 @@ public class ScoutViewModel extends ViewModel {
     private long startMillis = 0L;
     private boolean initialized = false;
 
-    public ScoutViewModel(MatchStateStore matchStateStore) {
-        this(matchStateStore, new MatchRepository());
-    }
+    /** Placeholder upload target until step 9 builds the real BUILT table and sync. */
+    static final String UPLOAD_TABLE = "scouting_records";
 
-    public ScoutViewModel(MatchStateStore matchStateStore, MatchRepository matchRepository) {
+    public ScoutViewModel(MatchStateStore matchStateStore) {
         this.matchStateStore = matchStateStore;
-        this.matchRepository = matchRepository;
     }
 
     private ScoutUiState state() {
@@ -404,7 +397,8 @@ public class ScoutViewModel extends ViewModel {
         AppExecutors.runBackground(() -> {
             ScoutUiState s = state();
             Map<String, Object> d = s.data;
-            String positionStr = TableResolver.positionString(parsePositionLabel(s.positionLabel));
+            // BUILT has no driver-station slots; until step 9 replaces this field, send the alliance.
+            String positionStr = s.deviceAlliance != null ? s.deviceAlliance.name().toLowerCase() : "";
 
             ScoutDataPayload payload = new ScoutDataPayload(
                     s.matchId,
@@ -428,7 +422,7 @@ public class ScoutViewModel extends ViewModel {
                     doubleOrDefault(d.get("total_shoot"), 0.0),
                     doubleOrDefault(d.get("avg_defend"), 0.0)
             );
-            String tableName = TableResolver.data(new Competition(s.competition, ""));
+            String tableName = UPLOAD_TABLE;
 
             // Offline-first: the match is queued to disk before anything else, so it is never
             // lost even if the device has no signal at all or the app is killed right after.
@@ -491,19 +485,6 @@ public class ScoutViewModel extends ViewModel {
         ScoutUiState s = state();
         long totalMs = s.timeTotals.getOrDefault(action, 0L);
         return ((long) ((totalMs / 1000.0) * 10)) / 10.0;
-    }
-
-    private static ScoutPosition parsePositionLabel(String label) {
-        String normalized = label.replace(" ", "_").toUpperCase();
-        switch (normalized) {
-            case "RED_1": return ScoutPosition.RED_1;
-            case "RED_2": return ScoutPosition.RED_2;
-            case "RED_3": return ScoutPosition.RED_3;
-            case "BLUE_1": return ScoutPosition.BLUE_1;
-            case "BLUE_2": return ScoutPosition.BLUE_2;
-            case "BLUE_3": return ScoutPosition.BLUE_3;
-            default: throw new IllegalArgumentException("Invalid position label: " + label);
-        }
     }
 
     private static boolean boolOrDefault(Object v, boolean def) {

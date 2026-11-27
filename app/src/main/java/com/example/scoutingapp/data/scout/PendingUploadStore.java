@@ -24,8 +24,7 @@ import java.util.Set;
  * device has no signal at all or the app is killed right after. SyncManager drains this
  * queue whenever connectivity comes back.
  *
- * Static "object"-style class, matching the ScheduleCache / PendingMatchStore convention
- * already used in this codebase.
+ * Static "object"-style class, initialized once from ScoutingApplication.
  */
 public final class PendingUploadStore {
 

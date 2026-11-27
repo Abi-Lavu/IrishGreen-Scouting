@@ -51,6 +51,13 @@ public class DataRepository implements IDataRepository {
         }
     }
 
+    /** REBUILT schedule row. Kept local to this class only until step 3 deletes the data screen. */
+    private static final class QualMatch {
+        int id;
+        int red1_team, red2_team, red3_team;
+        int blue1_team, blue2_team, blue3_team;
+    }
+
     private static QualMatch parseQualMatch(JSONObject row) throws Exception {
         QualMatch m = new QualMatch();
         m.id = row.getInt("id");

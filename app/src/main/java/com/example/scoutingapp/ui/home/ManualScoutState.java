@@ -1,20 +1,12 @@
 package com.example.scoutingapp.ui.home;
 
-import com.example.scoutingapp.data.config.Competition;
-import com.example.scoutingapp.data.config.ScoutPosition;
+import com.example.scoutingapp.ui.scout.Alliance;
 
 public class ManualScoutState {
     public String matchId = "";
     public String teamNumber = "";
     public String scouterName = "";
-    public ScoutPosition selectedPosition = null;
-    public ScoutPosition defaultPosition = ScoutPosition.RED_1;
-    public Competition competition = null;
-    public boolean isValidating = false;
-    public boolean isAlreadyScouted = false;
+    /** Must be picked by the scouter for every match; there is no device default in BUILT. */
+    public Alliance alliance = null;
     public boolean canSubmit = false;
-
-    public ScoutPosition effectivePosition() {
-        return selectedPosition != null ? selectedPosition : defaultPosition;
-    }
 }
